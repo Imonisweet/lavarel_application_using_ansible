@@ -3,13 +3,13 @@
 
 - name: Add php repository
   apt_repository:
-   repo: 'ppa:ondrej/php'
+   repo: "ppa:ondrej/php"
 
 - name: Install PHP
-  apt: name=php{{php_version}} state=latest
+  apt: name=php8.0-curl state=latest
 
 - name: Install PHP MB
-  apt: name=php{{php_version}}-mbstring state=latest
+  apt: name=php8.0-mbstring state=latest
 
 - name: Install PHP XML
   apt: name=php-xml state=latest
@@ -17,24 +17,36 @@
 - name: Install unzip
   apt: name=unzip state=latest
 
-
 - name: Download php-composer
   get_url:
     url: https://getcomposer.org/installer
     dest: /tmp/installer
 
-- name: install composer
-  shell: cat /tmp/installer | php -- --install-dir=/usr/local/bin
+- name: Download and install Composer
+  shell: curl -sS https://getcomposer.org/installer | php
   args:
+    chdir: /usr/src/
     creates: /usr/local/bin/composer
+    warn: false 
+    become: yes
+
+- name: Add Composer to global path
+  copy:
+    dest: /usr/local/bin/composer
+    group: root
+    mode: '0755'
+    owner: root
+    src: /usr/src/composer.phar
+    remote_src: yes
+    become: yes
 
 - name: rename composer.phar to composer
-  shell: mv /usr/local/bin/composer.phar /usr/local/bin/composer
+  shell: sudo mv composer.phar/usr/local/bin/ /usr/local/b>
   args:
     creates: /usr/local/bin/composer
 
 - name: make composer executable
-  file: 
+  file:
     path: /usr/local/bin/composer
     mode: a+x
     state: file
@@ -46,28 +58,28 @@
 
 - name: checkout latest code from github
   git: >
-    repo=https://github.com/devops4solutions/lavaral_project.git
-    dest=/opt/{{ vhost_name }}
+    repo=https://github.com/Imonisweet/lavarel_application_using_ansible.git
+    dest=/opt/lavarel_project
     force=yes
     accept_hostkey=yes
 
-- name: copy lavarel project
-  shell: sudo mv /opt/{{ vhost_name }} /var/www/html/
+#- name: copy lavarel project
+#  shell: sudo mv /opt/lavarel_project/ /var/www/html/
 
 - name: Change permission
-  shell: sudo chgrp -R www-data /var/www/html/{{ vhost_name }}/
+  shell: sudo chgrp -R www-data /var/www/html/lavarel_project/
 
 - name: Change permission
-  shell: sudo chmod -R 775 /var/www/html/{{ vhost_name }}/storage
+  shell: sudo chmod -R 775 /var/www/html/lavarel_project/storage
 
 - name: Remove default apache vhost config from sites-enabled
   file: name=/etc/apache2/sites-enabled/000-default.conf state=absent
 
 - name: Create apache vhosts for  domain
-  template: src=web.conf.j2 dest="/etc/apache2/sites-available/{{ vhost_name }}.conf" owner=www-data group=www-data mode=0644
+  template: src=web.conf.j2 dest="/etc/apache2/sites-available/lavarel_project.conf" owner=www-data group=www-data mode=0644
 
 - name: Update a2ensite
-  command: a2ensite {{ vhost_name }}
+  command: a2ensite lavarel_project
 
 - name: Enable the Apache rewrite module
   command:  a2enmod rewrite
