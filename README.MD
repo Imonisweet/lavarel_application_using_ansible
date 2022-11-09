@@ -31,6 +31,6 @@ ansible-playbook main.yml -i inventories/dev/hosts
 Make sure security group of DO laravel Server is open for port 80.
 
 ```
-curl http://publicip
+http://imonisweet.me
 
 ```
