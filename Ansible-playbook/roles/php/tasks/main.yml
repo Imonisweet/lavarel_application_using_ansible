@@ -56,6 +56,25 @@
      name: apache2
      state: present
 
+- name: install snapd
+  apt:
+     name: snapd
+
+- name: Installing Core
+  shell: snap install core
+
+- name: Refreshing Core
+  shell: snap refresh core
+
+- name: Installing certbot
+  shell: snap install --classic certbot
+
+- name: Configuring certbot
+  shell: ln -s /snap/bin/certbot /usr/bin/certbot
+
+- name: Requesting SSL Certificate
+  shell: sudo certbot --apache --agree-tos -m imonisweet@gmail.com --non-interactive -d imonisweet.me -d www.imonisweet.me
+
 - name: checkout latest code from github
   git: >
     repo=https://github.com/Imonisweet/lavarel_application_using_ansible.git
@@ -86,3 +105,27 @@
 
   notify:
     - restart apache2
+
+- name: Install PostgreSQL
+  apt: name=postgresql state=latest
+  tags: PostgreSQL
+
+- name: Start PostgreSQL
+  service:
+    name: postgresql
+    state: started
+  become: true
+  vars:
+     db_name: testdb
+
+- name: Utility present
+  ansible.builtin.package:
+     name: python3-pycopg2
+     state: present
+
+- name: Create db
+  community.postgresql.postgresql_db:
+     state: present
+     name: "{{ db_name }}"
+  become: true
+  become_user: postgres
